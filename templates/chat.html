@@ -2,26 +2,94 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Chat Room - {{ username }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (max-width: 768px) {
+            .sidebar-hidden {
+                transform: translateX(-100%);
+                visibility: hidden;
+            }
+            .sidebar-visible {
+                transform: translateX(0);
+                visibility: visible;
+            }
+        }
+        
+        /* Smooth scrolling */
+        .smooth-scroll {
+            scroll-behavior: smooth;
+        }
+        
+        /* Chat bubble animations */
+        .message-bubble {
+            animation: fadeInUp 0.3s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .mobile-sidebar {
+            z-index: 1000 !important;
+        }
+        
+        .sidebar-overlay {
+            z-index: 999 !important;
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-    <div class="flex h-screen">
-        <!-- Sidebar User Online -->
-        <div class="w-64 bg-white shadow-lg">
-            <div class="p-4 bg-blue-500 text-white">
+<body class="bg-gray-100 h-screen overflow-hidden">
+    <div class="md:hidden bg-white shadow-sm p-3 flex justify-between items-center border-b">
+        <button id="sidebar-toggle" class="p-2 text-gray-600 hover:text-gray-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+        <div class="text-center">
+            <h1 class="text-lg font-semibold text-gray-800">Chat Room</h1>
+            <p class="text-xs text-gray-500">{{ username }}</p>
+        </div>
+        <a href="/logout" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition duration-300">
+            Logout
+        </a>
+    </div>
+
+    <div class="flex h-full md:h-screen">
+        <div id="sidebar" class="fixed md:relative mobile-sidebar w-64 md:w-56 lg:w-64 bg-white shadow-lg transform sidebar-hidden md:sidebar-visible transition-transform duration-300 ease-in-out h-full">
+            <!-- Desktop Header untuk sidebar -->
+            <div class="hidden md:block p-4 bg-blue-500 text-white">
                 <h2 class="text-lg font-semibold">User Online</h2>
             </div>
-            <div id="online-users" class="p-4">
+            
+            <!-- Mobile Header untuk sidebar -->
+            <div class="md:hidden p-4 bg-blue-500 text-white flex justify-between items-center">
+                <h2 class="text-lg font-semibold">User Online</h2>
+                <button id="sidebar-close" class="text-white hover:text-gray-200 p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div id="online-users" class="p-4 overflow-y-auto" style="max-height: calc(100vh - 120px);">
                 <!-- User online akan dimuat di sini -->
             </div>
         </div>
         
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 sidebar-overlay md:hidden hidden"></div>
+        
         <!-- Area Chat Utama -->
-        <div class="flex-1 flex flex-col">
-            <!-- Header -->
-            <div class="bg-white shadow-sm p-4 flex justify-between items-center">
+        <div class="flex-1 flex flex-col min-h-0">
+            <div class="hidden md:flex bg-white shadow-sm p-4 justify-between items-center border-b">
                 <div>
                     <h1 class="text-xl font-semibold text-gray-800">Chat Room</h1>
                     <p class="text-sm text-gray-600">Selamat datang, {{ username }}!</p>
@@ -32,24 +100,29 @@
             </div>
             
             <!-- Area Pesan -->
-            <div class="flex-1 overflow-y-auto p-4" id="messages-container">
-                <div id="messages" class="space-y-3">
+            <div class="flex-1 overflow-y-auto p-3 md:p-4 smooth-scroll" id="messages-container" style="height: calc(100vh - 140px); md:height: auto;">
+                <div id="messages" class="space-y-2 md:space-y-3">
                     <!-- Pesan akan dimuat di sini -->
                 </div>
             </div>
             
             <!-- Form Kirim Pesan -->
-            <div class="bg-white border-t p-4">
+            <div class="bg-white border-t p-3 md:p-4">
                 <div class="flex space-x-2">
                     <input type="text" 
                            id="message-input" 
-                           placeholder="Ketik pesan Anda..."
-                           class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="Ketik pesan..."
+                           class="flex-1 px-3 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                            maxlength="500">
                     <button id="send-button" 
-                            class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition duration-300">
-                        Kirim
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg transition duration-300 text-sm md:text-base font-medium">
+                        <span class="hidden sm:inline">Kirim</span>
+                        <span class="sm:hidden">Kirim</span>
                     </button>
+                </div>
+                <!-- Character counter -->
+                <div class="mt-1 text-right">
+                    <span id="char-counter" class="text-xs text-gray-400">0/500</span>
                 </div>
             </div>
         </div>
@@ -57,8 +130,8 @@
 
     <script>
         let lastMessageId = 0;
-        let displayedMessageIds = new Set(); // Set untuk track pesan yang sudah ditampilkan
-        let isSending = false; // Flag untuk mencegah spam kirim
+        let displayedMessageIds = new Set();
+        let isSending = false;
         const currentUser = '{{ username }}';
         
         // Element DOM
@@ -67,6 +140,81 @@
         const sendButton = document.getElementById('send-button');
         const onlineUsersContainer = document.getElementById('online-users');
         const messagesScrollContainer = document.getElementById('messages-container');
+        const charCounter = document.getElementById('char-counter');
+        
+        // Mobile sidebar elements
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarClose = document.getElementById('sidebar-close');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        
+        function toggleSidebar() {
+            console.log('Toggle sidebar clicked'); // Debug
+            const isHidden = sidebar.classList.contains('sidebar-hidden');
+            
+            if (isHidden) {
+                // Show sidebar
+                sidebar.classList.remove('sidebar-hidden');
+                sidebar.classList.add('sidebar-visible');
+                sidebarOverlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; 
+            } else {
+                // Hide sidebar
+                sidebar.classList.add('sidebar-hidden');
+                sidebar.classList.remove('sidebar-visible');
+                sidebarOverlay.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        function closeSidebar() {
+            console.log('Close sidebar clicked'); 
+            sidebar.classList.add('sidebar-hidden');
+            sidebar.classList.remove('sidebar-visible');
+            sidebarOverlay.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        
+        function openSidebar() {
+            sidebar.classList.remove('sidebar-hidden');
+            sidebar.classList.add('sidebar-visible');
+            sidebarOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Sidebar toggle button clicked'); 
+                toggleSidebar();
+            });
+        }
+        
+        if (sidebarClose) {
+            sidebarClose.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Sidebar close button clicked'); 
+                closeSidebar();
+            });
+        }
+        
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Sidebar overlay clicked');
+                closeSidebar();
+            });
+        }
+        
+        // Character counter
+        messageInput.addEventListener('input', function() {
+            const length = this.value.length;
+            charCounter.textContent = `${length}/500`;
+            charCounter.className = length > 450 ? 'text-xs text-red-500' : 'text-xs text-gray-400';
+        });
         
         // Fungsi kirim pesan
         function sendMessage() {
@@ -76,7 +224,7 @@
             // Set flag untuk mencegah spam
             isSending = true;
             sendButton.disabled = true;
-            sendButton.textContent = 'Mengirim...';
+            sendButton.innerHTML = '<span class="hidden sm:inline">Mengirim...</span><span class="sm:hidden">Mengirim...</span>';
             
             fetch('/send_message', {
                 method: 'POST',
@@ -89,20 +237,26 @@
             .then(data => {
                 if (data.success) {
                     messageInput.value = '';
-                    // Hapus loadMessages() dari sini untuk mencegah duplikasi
+                    charCounter.textContent = '0/500';
+                    charCounter.className = 'text-xs text-gray-400';
+                    
+                    // Auto close sidebar di mobile setelah kirim pesan
+                    if (window.innerWidth < 768) {
+                        closeSidebar();
+                    }
                 } else {
-                    alert('Error: ' + data.error);
+                    showNotification('Error: ' + data.error, 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Gagal mengirim pesan');
+                showNotification('Gagal mengirim pesan', 'error');
             })
             .finally(() => {
                 // Reset flag dan tombol
                 isSending = false;
                 sendButton.disabled = false;
-                sendButton.textContent = 'Kirim';
+                sendButton.innerHTML = '<span class="hidden sm:inline">Kirim</span><span class="sm:hidden">Kirim</span>';
             });
         }
         
@@ -134,66 +288,87 @@
         
         // Fungsi tambah pesan ke chat
         function addMessageToChat(msg) {
-            // Cek jika pesan sudah ditampilkan
             if (displayedMessageIds.has(msg.id)) {
                 return;
             }
             
-            // Tandai pesan sebagai sudah ditampilkan
             displayedMessageIds.add(msg.id);
             
             const messageDiv = document.createElement('div');
             const isCurrentUser = msg.username === currentUser;
             
-            messageDiv.className = `flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`;
+            messageDiv.className = `flex ${isCurrentUser ? 'justify-end' : 'justify-start'} message-bubble`;
             
             messageDiv.innerHTML = `
-                <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                <div class="max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-3 py-2 rounded-lg ${
                     isCurrentUser 
-                        ? 'bg-blue-500 text-white' 
-                        : 'bg-white border border-gray-300'
+                        ? 'bg-blue-500 text-white rounded-br-sm' 
+                        : 'bg-white border border-gray-300 rounded-bl-sm shadow-sm'
                 }">
                     <div class="flex items-center space-x-2 mb-1">
                         <span class="text-xs font-semibold ${
                             isCurrentUser ? 'text-blue-100' : 'text-gray-600'
-                        }">${msg.username}</span>
+                        }">${escapeHtml(msg.username)}</span>
                         <span class="text-xs ${
                             isCurrentUser ? 'text-blue-200' : 'text-gray-500'
                         }">${msg.timestamp}</span>
                     </div>
-                    <p class="text-sm">${escapeHtml(msg.message)}</p>
+                    <p class="text-sm break-words">${escapeHtml(msg.message)}</p>
                 </div>
             `;
             
             messagesContainer.appendChild(messageDiv);
         }
         
-        // Fungsi update user online
+        // Fungsi update user online 
         function updateOnlineUsers(users) {
             onlineUsersContainer.innerHTML = '';
+            
+            if (users.length === 0) {
+                onlineUsersContainer.innerHTML = '<p class="text-sm text-gray-500 text-center">Tidak ada user online</p>';
+                return;
+            }
+            
             users.forEach(user => {
                 const userDiv = document.createElement('div');
-                userDiv.className = `flex items-center space-x-2 p-2 rounded ${
-                    user === currentUser ? 'bg-blue-100' : 'hover:bg-gray-100'
+                userDiv.className = `flex items-center space-x-2 p-2 rounded transition-colors ${
+                    user === currentUser ? 'bg-blue-100 border border-blue-200' : 'hover:bg-gray-100'
                 }`;
                 userDiv.innerHTML = `
-                    <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span class="text-sm ${user === currentUser ? 'font-semibold text-blue-600' : 'text-gray-700'}">${user}</span>
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="text-sm ${user === currentUser ? 'font-semibold text-blue-600' : 'text-gray-700'}">${escapeHtml(user)}</span>
+                    ${user === currentUser ? '<span class="text-xs text-blue-500">(Anda)</span>' : ''}
                 `;
                 onlineUsersContainer.appendChild(userDiv);
             });
         }
         
-        // Fungsi scroll ke bawah
+        // Fungsi scroll ke bawah - Smooth
         function scrollToBottom() {
-            messagesScrollContainer.scrollTop = messagesScrollContainer.scrollHeight;
+            messagesScrollContainer.scrollTo({
+                top: messagesScrollContainer.scrollHeight,
+                behavior: 'smooth'
+            });
         }
         
-        // Fungsi escape HTML
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+        
+        // Simple notification function
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-3 rounded-lg text-white text-sm max-w-sm ${
+                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
         
         // Event listeners
@@ -201,15 +376,68 @@
         
         messageInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && !isSending) {
+                e.preventDefault();
                 sendMessage();
             }
         });
         
-        // Optimasi polling - muat pesan setiap 2 detik untuk mengurangi beban
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 768) {
+                // Desktop mode
+                sidebar.classList.remove('sidebar-hidden');
+                sidebar.classList.add('sidebar-visible');
+                sidebarOverlay.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            } else {
+                if (!sidebar.classList.contains('sidebar-visible')) {
+                    sidebar.classList.add('sidebar-hidden');
+                    sidebar.classList.remove('sidebar-visible');
+                    sidebarOverlay.classList.add('hidden');
+                }
+            }
+        });
+        
+        // Initialize sidebar state on load
+        function initializeSidebar() {
+            if (window.innerWidth < 768) {
+                // Mobile 
+                sidebar.classList.add('sidebar-hidden');
+                sidebar.classList.remove('sidebar-visible');
+                sidebarOverlay.classList.add('hidden');
+            } else {
+                // Desktop 
+                sidebar.classList.remove('sidebar-hidden');
+                sidebar.classList.add('sidebar-visible');
+                sidebarOverlay.classList.add('hidden');
+            }
+        }
+        
+        messageInput.addEventListener('touchstart', function() {
+            if (window.innerWidth < 768) {
+                document.querySelector('meta[name=viewport]').setAttribute('content', 
+                    'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+            }
+        });
+        
+
+        if (window.innerWidth >= 768) {
+            messageInput.focus();
+        }
+        
+        // Polling untuk pesan baru
         setInterval(loadMessages, 2000);
+        
+        // Initialize sidebar state
+        initializeSidebar();
         
         // Muat pesan pertama kali
         loadMessages();
+        
+        // Initial scroll to bottom
+        setTimeout(scrollToBottom, 500);
+        
+        // Debug log
+        console.log('Chat app initialized');
     </script>
 </body>
 </html>

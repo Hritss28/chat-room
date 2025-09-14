@@ -9,14 +9,13 @@ def run_xmlrpc_server():
 
 def run_flask_app():
     """Jalankan Flask app"""
-    time.sleep(2)  # Tunggu XML-RPC server siap
+    time.sleep(2) 
     subprocess.run([sys.executable, "app.py"])
 
 if __name__ == "__main__":
     print("Memulai Chat Room Application...")
     print("1. Starting XML-RPC Server...")
     
-    # Jalankan XML-RPC server di thread terpisah
     xmlrpc_thread = threading.Thread(target=run_xmlrpc_server, daemon=True)
     xmlrpc_thread.start()
     
