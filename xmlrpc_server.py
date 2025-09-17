@@ -18,9 +18,9 @@ class ChatServer:
         try:
             self.db = mysql.connector.connect(**self.db_config)
             self.cursor = self.db.cursor(dictionary=True)
-            print("Connected to MySQL database")
+            print(" Connected to MySQL database")
         except mysql.connector.Error as e:
-            print(f"Error connecting to MySQL: {e}")
+            print(f" Error connecting to MySQL: {e}")
             self.db = None
             self.cursor = None
     
@@ -31,7 +31,7 @@ class ChatServer:
                 self.init_db_connection()
             return self.db, self.cursor
         except Exception as e:
-            print(f"Database connection error: {e}")
+            print(f" Database connection error: {e}")
             return None, None
     
     def register(self, username, password, email=""):
@@ -181,28 +181,28 @@ class ChatServer:
             messages = cursor.fetchall()
             
             # Debug log
-            print(f"Retrieved {len(messages)} messages after ID {last_id}")
+            print(f" Retrieved {len(messages)} messages after ID {last_id}")
             
             return messages
         
         except mysql.connector.Error as e:
-            print(f"MySQL Error in get_messages: {e}")
-            print(f"Query parameters: last_id={last_id} (type: {type(last_id)})")
+            print(f" MySQL Error in get_messages: {e}")
+            print(f" Query parameters: last_id={last_id} (type: {type(last_id)})")
             
             # Fallback: coba query tanpa parameter
             try:
                 simple_query = "SELECT id, username, message, DATE_FORMAT(timestamp, '%H:%i:%s') as timestamp FROM messages ORDER BY id DESC LIMIT 10"
                 cursor.execute(simple_query)
                 messages = cursor.fetchall()
-                print(f"� Fallback: Retrieved {len(messages)} messages")
+                print(f" Fallback: Retrieved {len(messages)} messages")
                 return messages
             except Exception as fallback_error:
-                print(f"Fallback query also failed: {fallback_error}")
+                print(f" Fallback query also failed: {fallback_error}")
                 return []
                 
         except Exception as e:
-            print(f"Unexpected error in get_messages: {e}")
-            print(f"Parameters: last_id={last_id} (type: {type(last_id)})")
+            print(f" Unexpected error in get_messages: {e}")
+            print(f" Parameters: last_id={last_id} (type: {type(last_id)})")
             return []
     
     def get_online_users(self):
@@ -217,7 +217,7 @@ class ChatServer:
             return [user['username'] for user in users]
         
         except mysql.connector.Error as e:
-            print(f"Error getting online users: {e}")
+            print(f" Error getting online users: {e}")
             return []
     
     def get_total_messages(self):
@@ -232,7 +232,7 @@ class ChatServer:
             return result['total'] if result else 0
         
         except mysql.connector.Error as e:
-            print(f"Error getting message count: {e}")
+            print(f" Error getting message count: {e}")
             return 0
 
 def start_xmlrpc_server():
@@ -244,7 +244,7 @@ def start_xmlrpc_server():
     
     # Tampilkan informasi server
     local_ip = socket.gethostbyname(socket.gethostname())
-    print("Connected to MySQL database")
+    print("✅ Connected to MySQL database")
     print("XML-RPC Server berjalan di:")
     print(f"- Network: http://{local_ip}:8001")
     print("- Untuk HP: gunakan IP address komputer ini")
